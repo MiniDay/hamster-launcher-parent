@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.image.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+
+<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" onMouseClicked="#onClickProfile" prefHeight="60.0" prefWidth="280.0" style="-fx-border-color: black; -fx-background-color: rgba(0,255,255,0.2); -fx-cursor: HAND;" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="cn.hamster3.application.launcher.controller.AccountController">
+    <children>
+        <ImageView fx:id="playerIcon" fitHeight="45.0" fitWidth="45.0" pickOnBounds="true" preserveRatio="true" AnchorPane.bottomAnchor="6.0" AnchorPane.leftAnchor="6.0" AnchorPane.topAnchor="6.0">
+            <image>
+                <Image url="@/images/icon.png" />
+            </image>
+        </ImageView>
+        <Label fx:id="playerName" layoutX="62.0" layoutY="12.0" maxWidth="-Infinity" minWidth="-Infinity" prefWidth="100.0" text="playerName" AnchorPane.leftAnchor="61.0" AnchorPane.topAnchor="10.0">
+            <font>
+                <Font name="Consolas" size="16.0" />
+            </font>
+        </Label>
+        <Label fx:id="type" text="五彩方块" AnchorPane.rightAnchor="60.0" AnchorPane.topAnchor="10.0">
+            <font>
+                <Font name="Microsoft YaHei" size="14.0" />
+            </font>
+        </Label>
+        <Label fx:id="account" prefHeight="19.0" prefWidth="180.0" text="372403923@qq.com" AnchorPane.bottomAnchor="10.0" AnchorPane.leftAnchor="60.0">
+            <font>
+                <Font size="14.0" />
+            </font>
+        </Label>
+        <ImageView fx:id="deleteImage" fitHeight="32.0" fitWidth="32.0" pickOnBounds="true" preserveRatio="true" AnchorPane.bottomAnchor="14.0" AnchorPane.rightAnchor="14.0" AnchorPane.topAnchor="14.0">
+            <image>
+                <Image url="@/images/delete.png" />
+            </image>
+        </ImageView>
+    </children>
+</AnchorPane>

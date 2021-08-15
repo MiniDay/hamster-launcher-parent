@@ -1,0 +1,52 @@
+plugins {
+    id 'java'
+}
+
+version '1.0.0-SNAPSHOT'
+
+repositories {
+    maven {
+        url "https://maven.airgame.net/repository/maven-public/"
+    }
+}
+
+configurations {
+    implementationShade
+    implementation.extendsFrom implementationShade
+}
+
+dependencies {
+    // https://mvnrepository.com/artifact/org.jetbrains/annotations
+    implementationShade group: 'org.jetbrains', name: 'annotations', version: '22.0.0'
+    // https://mvnrepository.com/artifact/com.google.code.gson/gson
+    implementationShade group: 'com.google.code.gson', name: 'gson', version: '2.8.7'
+
+    // https://mvnrepository.com/artifact/org.openjfx/javafx-base
+    compileOnly group: 'org.openjfx', name: 'javafx-base', version: '16'
+    // https://mvnrepository.com/artifact/org.openjfx/javafx-controls
+    compileOnly group: 'org.openjfx', name: 'javafx-controls', version: '16'
+    // https://mvnrepository.com/artifact/org.openjfx/javafx-graphics
+    compileOnly group: 'org.openjfx', name: 'javafx-graphics', version: '16'
+    // https://mvnrepository.com/artifact/org.openjfx/javafx-fxml
+    compileOnly group: 'org.openjfx', name: 'javafx-fxml', version: '16'
+
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.2'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.7.2'
+}
+
+test {
+    useJUnitPlatform()
+}
+
+jar {
+    archivesBaseName = "HamsterLauncher"
+    manifest.attributes('Main-Class': 'cn.hamster3.application.launcher.Bootstrap')
+    from([
+            configurations.implementationShade.collect {
+                it.isDirectory() ? it : zipTree(it)
+            },
+            rootProject.file("LICENSE")
+    ])
+    duplicatesStrategy(DuplicatesStrategy.EXCLUDE)
+    destinationDir(rootProject.buildDir)
+}

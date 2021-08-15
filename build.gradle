@@ -1,0 +1,6 @@
+group 'cn.hamster3.application'
+version '1.0.0-SNAPSHOT'
+
+rootProject.subprojects {
+    group = rootProject.getGradle()
+}

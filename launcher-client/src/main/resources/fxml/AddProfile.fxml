@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.image.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+
+<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" onMouseClicked="#onMouseClicked" prefHeight="60.0" prefWidth="280.0" style="-fx-cursor: HAND; -fx-border-color: black;" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="cn.hamster3.application.launcher.controller.AddProfileController">
+    <children>
+        <ImageView fx:id="playerIcon" fitHeight="45.0" fitWidth="45.0" pickOnBounds="true" preserveRatio="true" AnchorPane.bottomAnchor="6.0" AnchorPane.leftAnchor="6.0" AnchorPane.topAnchor="6.0">
+            <image>
+                <Image url="@/images/icon.png" />
+            </image>
+        </ImageView>
+        <Label fx:id="playerName" AnchorPane.leftAnchor="60.0" AnchorPane.topAnchor="10.0">
+            <font>
+                <Font name="Consolas" size="18.0" />
+            </font>
+        </Label>
+        <Label fx:id="type" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="10.0">
+            <font>
+                <Font name="Microsoft YaHei" size="14.0" />
+            </font>
+        </Label>
+        <Label fx:id="account" maxHeight="-Infinity" maxWidth="-Infinity" prefHeight="19.0" prefWidth="200.0" text="372403923@qq.com" AnchorPane.bottomAnchor="10.0" AnchorPane.leftAnchor="60.0">
+            <font>
+                <Font size="14.0" />
+            </font>
+        </Label>
+    </children>
+</AnchorPane>

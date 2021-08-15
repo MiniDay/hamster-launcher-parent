@@ -1,0 +1,65 @@
+//file:noinspection GroovyAssignabilityCheck
+plugins {
+    id 'java'
+    id("com.github.johnrengelman.shadow") version "7.0.0"
+}
+
+version '1.0.0-SNAPSHOT'
+
+repositories {
+    maven {
+        url "https://maven.airgame.net/repository/maven-public/"
+    }
+}
+
+def vertxVersion = "4.1.2"
+def junitJupiterVersion = '5.7.2'
+
+def mainVerticleName = "cn.hamster3.application.launcher.server.Bootstrap"
+def launcherClassName = "io.vertx.core.Launcher"
+
+configurations {
+    implementationShade
+    implementation.extendsFrom implementationShade
+}
+
+dependencies {
+    implementationShade "io.vertx:vertx-core:${vertxVersion}"
+    implementationShade "io.vertx:vertx-web:${vertxVersion}"
+    implementationShade "io.vertx:vertx-web-client:${vertxVersion}"
+
+    testImplementation("io.vertx:vertx-junit5:${vertxVersion}")
+    testImplementation("org.junit.jupiter:junit-jupiter:$junitJupiterVersion")
+}
+
+test {
+    useJUnitPlatform()
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_16
+    targetCompatibility = JavaVersion.VERSION_16
+}
+
+import org.gradle.api.tasks.testing.logging.TestLogEvent
+
+tasks.withType(Test) {
+    useJUnitPlatform()
+    testLogging {
+        events = [TestLogEvent.PASSED, TestLogEvent.SKIPPED, TestLogEvent.FAILED]
+    }
+}
+
+jar {
+    archivesBaseName = "HamsterLauncher-Server"
+    manifest.attributes('Main-Class': "${launcherClassName}")
+    manifest.attributes('Main-Verticle': "${mainVerticleName}")
+    from([
+            configurations.implementationShade.collect {
+                it.isDirectory() ? it : zipTree(it)
+            },
+            rootProject.file("LICENSE")
+    ])
+    duplicatesStrategy(DuplicatesStrategy.EXCLUDE)
+    destinationDir(rootProject.buildDir)
+}

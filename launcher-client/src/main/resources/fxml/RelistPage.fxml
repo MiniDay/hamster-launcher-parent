@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+
+<VBox fx:id="relistPane" alignment="CENTER" prefHeight="200.0" prefWidth="300.0" spacing="10.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="cn.hamster3.application.launcher.controller.RelistPageController">
+   <children>
+      <Label text="重新验证">
+         <font>
+            <Font size="18.0" />
+         </font>
+         <VBox.margin>
+            <Insets bottom="10.0" />
+         </VBox.margin></Label>
+       <HBox>
+           <children>
+               <Label text="账号：">
+                   <font>
+                       <Font name="Microsoft YaHei" size="14.0" />
+                   </font>
+               </Label>
+               <TextField fx:id="accountField" editable="false" prefWidth="200.0" text="372403923@qq.com" />
+           </children>
+       </HBox>
+       <HBox>
+           <children>
+               <Label text="密码：">
+                   <font>
+                       <Font name="Microsoft YaHei" size="14.0" />
+                   </font>
+               </Label>
+            <PasswordField fx:id="passwordField" onAction="#onConfirm" prefWidth="200.0" />
+           </children>
+       </HBox>
+      <Button mnemonicParsing="false" onAction="#onConfirm" text="确定" />
+   </children>
+   <padding>
+      <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
+   </padding>
+</VBox>

@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+<VBox xmlns:fx="http://javafx.com/fxml/1" onMouseDragged="#onMouseDragged"
+      onMousePressed="#onMousePressed" onMouseReleased="#onMouseReleased" onTouchMoved="#onTouchMoved"
+      fx:id="configPane"
+      alignment="CENTER" snapToPixel="false" spacing="15.0" xmlns="http://javafx.com/javafx/11.0.1"
+      fx:controller="cn.hamster3.application.launcher.controller.ConfigPageController">
+
+    <children>
+        <HBox alignment="CENTER_LEFT" spacing="5.0">
+            <children>
+                <Label text="Java路径：">
+                    <font>
+                        <Font name="Microsoft YaHei" size="14.0"/>
+                    </font>
+                </Label>
+                <TextField fx:id="javaPathField" prefHeight="23.0" prefWidth="439.0"
+                           promptText="启动Minecraft1.17需要Java16"/>
+                <Button mnemonicParsing="false" text="浏览"/>
+            </children>
+        </HBox>
+        <HBox alignment="CENTER_LEFT" spacing="5.0">
+            <children>
+                <Label text="自定义JVM参数：">
+                    <font>
+                        <Font size="14.0"/>
+                    </font>
+                </Label>
+                <TextField fx:id="customJvmArgumentsField" prefHeight="23.0" prefWidth="440.0"/>
+            </children>
+        </HBox>
+        <HBox alignment="CENTER" nodeOrientation="LEFT_TO_RIGHT" spacing="5.0">
+            <children>
+                <Label text="最小内存：">
+                    <font>
+                        <Font name="Microsoft YaHei" size="14.0"/>
+                    </font>
+                </Label>
+                <TextField fx:id="minMemoryField" prefHeight="23.0" prefWidth="90.0" promptText="≤6144"/>
+                <Label text="MB">
+                    <font>
+                        <Font name="Microsoft YaHei" size="14.0"/>
+                    </font>
+                </Label>
+                <Label text="最大内存：">
+                    <font>
+                        <Font name="Microsoft YaHei" size="14.0"/>
+                    </font>
+                </Label>
+                <TextField fx:id="maxMemoryField" prefWidth="90.0" promptText="≥128"/>
+                <Label text="MB">
+                    <font>
+                        <Font name="Microsoft YaHei" size="14.0"/>
+                    </font>
+                </Label>
+            </children>
+        </HBox>
+        <HBox alignment="CENTER_LEFT" spacing="5.0">
+            <children>
+                <CheckBox fx:id="customScreenSizeCheckBox" mnemonicParsing="false" text="自定义游戏分辨率"/>
+                <TextField fx:id="widthField"/>
+                <Label text="×">
+                    <font>
+                        <Font size="14.0"/>
+                    </font>
+                </Label>
+                <TextField fx:id="heightField"/>
+            </children>
+        </HBox>
+        <HBox>
+            <children>
+                <CheckBox mnemonicParsing="false" text="不检查游戏文件完整性"/>
+            </children>
+        </HBox>
+        <HBox spacing="60.0">
+            <children>
+                <Button cancelButton="true" mnemonicParsing="false" onAction="#onCancel" prefHeight="20.0"
+                        prefWidth="250.0" text="取消">
+                    <font>
+                        <Font name="Microsoft YaHei" size="14.0"/>
+                    </font>
+                </Button>
+                <Button defaultButton="true" mnemonicParsing="false" onAction="#onSave" prefWidth="250.0" text="保存"
+                        HBox.hgrow="ALWAYS">
+                    <font>
+                        <Font name="Microsoft YaHei" size="14.0"/>
+                    </font>
+                </Button>
+            </children>
+        </HBox>
+    </children>
+    <padding>
+        <Insets bottom="30.0" left="30.0" right="30.0" top="30.0"/>
+    </padding>
+</VBox>
