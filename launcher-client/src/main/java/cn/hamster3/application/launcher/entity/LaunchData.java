@@ -180,7 +180,7 @@ public class LaunchData {
                 continue;
             }
             // 找到这个 jar 文件，并解压其中的 native 函数库
-            File nativeLibraryFile = new File(librariesFolder, path.path());
+            File nativeLibraryFile = new File(librariesFolder, path.getPath());
 
             JarFile jarFile = new JarFile(nativeLibraryFile);
             Enumeration<? extends ZipEntry> entries = jarFile.entries();
@@ -223,7 +223,7 @@ public class LaunchData {
             if (path.isNative()) {
                 continue;
             }
-            classPath.add(pathPrefix + path.path());
+            classPath.add(pathPrefix + path.getPath());
         }
         classPath.add(minecraftJarFile.getAbsolutePath());
         return String.join(";", classPath);

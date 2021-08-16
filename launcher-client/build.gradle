@@ -38,9 +38,15 @@ test {
     useJUnitPlatform()
 }
 
+java {
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
+}
+
 jar {
     archivesBaseName = "HamsterLauncher"
     manifest.attributes('Main-Class': 'cn.hamster3.application.launcher.Bootstrap')
+    manifest.attributes('launcher-version': project.version)
     from([
             configurations.implementationShade.collect {
                 it.isDirectory() ? it : zipTree(it)

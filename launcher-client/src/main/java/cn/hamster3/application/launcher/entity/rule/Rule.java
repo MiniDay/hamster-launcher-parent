@@ -27,10 +27,7 @@ public class Rule {
 
     @SuppressWarnings({"RedundantIfStatement", "BooleanMethodIsAlwaysInverted"})
     public boolean match(LaunchOptions options) {
-        boolean flag = switch (action) {
-            case ALLOW -> true;
-            case DISALLOW -> false;
-        };
+        boolean flag = action == Action.ALLOW;
         if (os != null) {
             if (os.match() != flag) {
                 return false;

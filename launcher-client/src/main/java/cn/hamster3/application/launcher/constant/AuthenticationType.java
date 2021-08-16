@@ -1,10 +1,10 @@
 package cn.hamster3.application.launcher.constant;
 
+import cn.hamster3.application.launcher.entity.auth.AccountProfile;
+import cn.hamster3.application.launcher.util.LauncherUtils;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import cn.hamster3.application.launcher.entity.auth.AccountProfile;
-import cn.hamster3.application.launcher.util.LauncherUtils;
 
 import javax.net.ssl.HttpsURLConnection;
 import java.io.IOException;
@@ -12,7 +12,6 @@ import java.io.InputStreamReader;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
-import java.util.Map;
 
 @SuppressWarnings("SpellCheckingInspection")
 public enum AuthenticationType {
@@ -106,29 +105,28 @@ public enum AuthenticationType {
      * https://github.com/yushijinhun/authlib-injector/wiki/Yggdrasil-%E6%9C%8D%E5%8A%A1%E7%AB%AF%E6%8A%80%E6%9C%AF%E8%A7%84%E8%8C%83#%E7%99%BB%E5%BD%95
      */
     public JsonObject postLogin(String account, String password, boolean requestUser) throws IOException {
-        String params = LauncherUtils.gson.toJson(Map.of(
-                "username", account,
-                "password", password,
-                "requestUser", requestUser,
-                "agent", Map.of(
-                        "name", "Minecraft",
-                        "version", 1
-                )
-        ));
-        return post(authHost + "/authenticate", params).getAsJsonObject();
+        JsonObject object = new JsonObject();
+        object.addProperty("username", account);
+        object.addProperty("password", password);
+        object.addProperty("requestUser", requestUser);
+
+        JsonObject agent = new JsonObject();
+        agent.addProperty("name", "Minecraft");
+        agent.addProperty("version", 1);
+        object.add("agent", agent);
+
+        return post(authHost + "/authenticate", object.toString()).getAsJsonObject();
     }
 
     public JsonObject postRefresh(AccountProfile profile, boolean requestUser) throws IOException {
+        JsonObject object = new JsonObject();
+        object.addProperty("name", profile.getPlayerName());
+        object.addProperty("id", profile.getPlayerUUID());
         return postRefresh(
                 profile.getAccessToken(),
                 profile.getClientToken(),
                 requestUser,
-                LauncherUtils.gson.toJsonTree(
-                        Map.of(
-                                "name", profile.getPlayerName(),
-                                "id", profile.getPlayerUUID()
-                        )
-                ).getAsJsonObject()
+                object
         ).getAsJsonObject();
     }
 
@@ -136,20 +134,20 @@ public enum AuthenticationType {
      * https://github.com/yushijinhun/authlib-injector/wiki/Yggdrasil-%E6%9C%8D%E5%8A%A1%E7%AB%AF%E6%8A%80%E6%9C%AF%E8%A7%84%E8%8C%83#%E5%88%B7%E6%96%B0
      */
     public JsonElement postRefresh(String accessToken, String clientToken, boolean requestUser, JsonObject selectedProfile) throws IOException {
-        String params = LauncherUtils.gson.toJson(Map.of(
-                "accessToken", accessToken,
-                "clientToken", clientToken,
-                "requestUser", requestUser,
-                "selectedProfile", selectedProfile
-        ));
-        return post(authHost + "/refresh", params);
+        JsonObject object = new JsonObject();
+        object.addProperty("accessToken", accessToken);
+        object.addProperty("clientToken", clientToken);
+        object.addProperty("requestUser", requestUser);
+        object.add("selectedProfile", selectedProfile);
+
+        return post(authHost + "/refresh", object.toString());
     }
 
     public boolean postValidate(AccountProfile profile) throws IOException {
-        String params = LauncherUtils.gson.toJson(Map.of(
-                "accessToken", profile.getAccessToken(),
-                "clientToken", profile.getClientToken()
-        ));
+        JsonObject object = new JsonObject();
+        object.addProperty("accessToken", profile.getAccessToken());
+        object.addProperty("clientToken", profile.getClientToken());
+        String params = object.toString();
         String apiUrl = authHost + "/validate";
         System.out.println("HTTP POST 请求: " + apiUrl);
         HttpsURLConnection connection = getConnection(apiUrl);
@@ -164,10 +162,10 @@ public enum AuthenticationType {
 
     public String getSkilUrl(String playerUUID, String playerName) {
         switch (this) {
-            case AIRGAME -> {
+            case AIRGAME: {
                 return url + "/skin/" + playerName + ".png";
             }
-            case OFFICIAL -> {
+            case OFFICIAL: {
                 try {
                     JsonObject object = get(sessionHost + "/session/minecraft/profile/" + playerUUID).getAsJsonObject();
                     if (!object.has("properties")) {

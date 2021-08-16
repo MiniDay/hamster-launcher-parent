@@ -1,8 +1,8 @@
 package cn.hamster3.application.launcher.entity.auth;
 
 import cn.hamster3.application.launcher.constant.AuthenticationType;
-import javafx.scene.image.Image;
 import cn.hamster3.application.launcher.util.LauncherUtils;
+import javafx.scene.image.Image;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -111,7 +111,8 @@ public class AccountProfile {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof AccountProfile account)) return false;
+        if (!(o instanceof AccountProfile)) return false;
+        AccountProfile account = (AccountProfile) o;
         return type == account.type && playerUUID.equals(account.playerUUID);
     }
 

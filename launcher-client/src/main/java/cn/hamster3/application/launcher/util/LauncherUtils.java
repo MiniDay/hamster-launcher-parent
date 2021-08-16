@@ -17,6 +17,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
+import java.util.jar.JarFile;
 
 public class LauncherUtils {
     public static final Gson gson = new GsonBuilder().serializeNulls().setPrettyPrinting().create();
@@ -80,6 +81,21 @@ public class LauncherUtils {
         return System.getProperty("java.home").replace("\\", "/");
     }
 
+    public static String getLauncherVersion() {
+        if (System.getProperties().containsKey("launcher-version")) {
+            return System.getProperty("launcher-version");
+        }
+        try {
+            JarFile file = new JarFile(getLauncherJarFile());
+            String value = file.getManifest().getMainAttributes().getValue("launcher-version");
+            System.setProperty("launcher-version", value);
+            return value;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return "unknown version";
+        }
+    }
+
     /**
      * 获取启动脚本
      *
@@ -109,22 +125,28 @@ public class LauncherUtils {
 
         StringArray startScript = new StringArray();
         switch (SystemType.getSystemType()) {
-            case WINDOWS -> startScript
-                    .append("\"%s/bin/java.exe\"", options.getJavaPath())
-                    .append(jvmArguments)
-                    .append(launchData.getMainClass())
-                    .append(gameArguments);
-            case LINUX -> startScript
-                    .append("nohup %s/bin/java", options.getJavaPath())
-                    .append(jvmArguments)
-                    .append(launchData.getMainClass())
-                    .append(gameArguments)
-                    .append("&");
-            default -> startScript
-                    .append("%s/bin/javaw", options.getJavaPath())
-                    .append(jvmArguments)
-                    .append(launchData.getMainClass())
-                    .append(gameArguments);
+            case WINDOWS: {
+                startScript
+                        .append("\"%s/bin/java.exe\"", options.getJavaPath())
+                        .append(jvmArguments)
+                        .append(launchData.getMainClass())
+                        .append(gameArguments);
+            }
+            case LINUX: {
+                startScript
+                        .append("nohup %s/bin/java", options.getJavaPath())
+                        .append(jvmArguments)
+                        .append(launchData.getMainClass())
+                        .append(gameArguments)
+                        .append("&");
+            }
+            default: {
+                startScript
+                        .append("%s/bin/javaw", options.getJavaPath())
+                        .append(jvmArguments)
+                        .append(launchData.getMainClass())
+                        .append(gameArguments);
+            }
         }
         return startScript;
     }
