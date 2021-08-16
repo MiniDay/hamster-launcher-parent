@@ -1,6 +1,7 @@
 package cn.hamster3.application.launcher;
 
 import cn.hamster3.application.launcher.util.LauncherUtils;
+import cn.hamster3.application.launcher.util.ThreadUtils;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
@@ -54,5 +55,6 @@ public class Bootstrap extends Application {
         stage.initStyle(StageStyle.UNDECORATED);
         stage.getIcons().add(new Image("/images/icon.png"));
         stage.show();
+        stage.onCloseRequestProperty().set(event -> ThreadUtils.executorService.shutdownNow());
     }
 }

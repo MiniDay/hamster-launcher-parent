@@ -2,6 +2,7 @@ package cn.hamster3.application.launcher.constant;
 
 import cn.hamster3.application.launcher.entity.auth.AccountProfile;
 import cn.hamster3.application.launcher.util.LauncherUtils;
+import cn.hamster3.application.launcher.util.ThreadUtils;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -12,6 +13,7 @@ import java.io.InputStreamReader;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
+import java.util.concurrent.CompletableFuture;
 
 @SuppressWarnings("SpellCheckingInspection")
 public enum AuthenticationType {
@@ -143,21 +145,29 @@ public enum AuthenticationType {
         return post(authHost + "/refresh", object.toString());
     }
 
-    public boolean postValidate(AccountProfile profile) throws IOException {
-        JsonObject object = new JsonObject();
-        object.addProperty("accessToken", profile.getAccessToken());
-        object.addProperty("clientToken", profile.getClientToken());
-        String params = object.toString();
-        String apiUrl = authHost + "/validate";
-        System.out.println("HTTP POST 请求: " + apiUrl);
-        HttpsURLConnection connection = getConnection(apiUrl);
-        connection.setRequestMethod("POST");
-        System.out.println(params);
-        connection.getOutputStream().write(params.getBytes(StandardCharsets.UTF_8));
-        int code = connection.getResponseCode();
-        System.out.println("请求返回: " + code);
-        System.out.println();
-        return code == 204;
+    public CompletableFuture<Boolean> postValidate(AccountProfile profile) {
+        CompletableFuture<Boolean> future = new CompletableFuture<>();
+        ThreadUtils.exec(() -> {
+            JsonObject object = new JsonObject();
+            object.addProperty("accessToken", profile.getAccessToken());
+            object.addProperty("clientToken", profile.getClientToken());
+            String params = object.toString();
+            String apiUrl = authHost + "/validate";
+            System.out.println("HTTP POST 请求: " + apiUrl);
+            try {
+                HttpsURLConnection connection = getConnection(apiUrl);
+                connection.setRequestMethod("POST");
+                System.out.println(params);
+                connection.getOutputStream().write(params.getBytes(StandardCharsets.UTF_8));
+                int code = connection.getResponseCode();
+                System.out.println("请求返回: " + code);
+                System.out.println();
+                future.complete(code == 204);
+            } catch (Exception e) {
+                future.completeExceptionally(e);
+            }
+        });
+        return future;
     }
 
     public String getSkilUrl(String playerUUID, String playerName) {

@@ -19,7 +19,7 @@ public class StreamRedirectThread extends Thread {
             try {
                 int readSize = process.getInputStream().read(bytes);
                 if (readSize <= 0) {
-                    exit();
+                    shutdown();
                     break;
                 }
                 String output = new String(bytes, 0, readSize);
@@ -44,7 +44,7 @@ public class StreamRedirectThread extends Thread {
         System.out.print(output);
     }
 
-    private void exit() {
+    private void shutdown() {
         if (process == null) {
             return;
         }

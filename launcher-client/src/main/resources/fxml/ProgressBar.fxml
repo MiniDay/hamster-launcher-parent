@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+
+
+<SplitPane fx:controller="cn.hamster3.application.launcher.controller.ProgressBarController" dividerPositions="0.382" nodeOrientation="LEFT_TO_RIGHT" prefHeight="20.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/11.0.2" xmlns:fx="http://javafx.com/fxml/1">
+   <items>
+      <Label fx:id="name" minWidth="80.0" text="c79416acc317eaade53307342d894ed6cf787c754282ae9de79e37ca28253941" />
+      <ProgressBar fx:id="progress" maxWidth="1.7976931348623157E308" minWidth="200.0" />
+   </items>
+</SplitPane>

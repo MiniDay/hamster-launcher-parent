@@ -1,15 +1,22 @@
 package cn.hamster3.application.launcher.util;
 
 import cn.hamster3.application.launcher.Bootstrap;
+import cn.hamster3.application.launcher.constant.AuthenticationType;
 import cn.hamster3.application.launcher.constant.SystemType;
+import cn.hamster3.application.launcher.controller.ProgressBarController;
+import cn.hamster3.application.launcher.controller.ProgressBarListController;
+import cn.hamster3.application.launcher.controller.SidebarPageController;
 import cn.hamster3.application.launcher.entity.LaunchData;
 import cn.hamster3.application.launcher.entity.auth.AccountProfile;
 import cn.hamster3.application.launcher.entity.option.LaunchOptions;
 import cn.hamster3.application.launcher.entity.rule.Rule;
 import cn.hamster3.application.launcher.object.StringArray;
+import cn.hamster3.application.launcher.thread.StreamRedirectThread;
 import com.google.gson.*;
+import javafx.scene.control.Alert;
 
 import javax.imageio.ImageIO;
+import javax.net.ssl.HttpsURLConnection;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
@@ -17,6 +24,13 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
+import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
+import java.util.ArrayList;
+import java.util.concurrent.CompletableFuture;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 import java.util.jar.JarFile;
 
 public class LauncherUtils {
@@ -220,5 +234,6 @@ public class LauncherUtils {
         stream.close();
         return bytes;
     }
+
 
 }
