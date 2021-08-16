@@ -8,7 +8,9 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)
 public @interface Route {
-    String value() default "";
+    String value();
 
-    String method() default "null";
+    boolean isRegex() default false;
+
+    String[] method() default {};
 }

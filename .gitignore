@@ -2,4 +2,5 @@ build/
 .gradle/
 .idea/
 backgrounds/
+logs/
 config.json
