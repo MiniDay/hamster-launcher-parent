@@ -6,11 +6,11 @@ import java.security.MessageDigest;
 
 public class EncryptionUtils {
 
-    public static boolean verificationFileSHA1(File file, String sha1) {
+    public static boolean sha1(File file, String sha1) {
         return hashFile(file, "SHA1").equals(sha1);
     }
 
-    public static boolean verificationFileSHA256(File file, String sha256) {
+    public static boolean sha256(File file, String sha256) {
         return hashFile(file, "SHA-256").equals(sha256);
     }
 
@@ -25,21 +25,27 @@ public class EncryptionUtils {
     }
 
     private static String getHash(File file, String hashType) throws Exception {
-        FileInputStream inputStream = new FileInputStream(file);
+        FileInputStream stream = new FileInputStream(file);
         byte[] buffer = new byte[1024];
-        MessageDigest md5 = MessageDigest.getInstance(hashType);
-        for (int numRead; (numRead = inputStream.read(buffer)) > 0; ) {
-            md5.update(buffer, 0, numRead);
+        MessageDigest digest = MessageDigest.getInstance(hashType);
+        int read = stream.read(buffer);
+        while (read > 0) {
+            digest.update(buffer, 0, read);
+            read = stream.read(buffer);
         }
-        inputStream.close();
-        return toHexString(md5.digest());
+        stream.close();
+        return toHexString(digest.digest());
     }
 
-    private static String toHexString(byte[] b) {
-        StringBuilder sb = new StringBuilder();
-        for (byte aB : b) {
-            sb.append(Integer.toHexString(aB & 0xFF));
+    private static String toHexString(byte[] bytes) {
+        StringBuilder builder = new StringBuilder();
+        for (byte b : bytes) {
+            String hex = Integer.toHexString(b & 0xFF);
+            if (hex.length() < 2) {
+                builder.append(0);
+            }
+            builder.append(hex);
         }
-        return sb.toString();
+        return builder.toString();
     }
 }

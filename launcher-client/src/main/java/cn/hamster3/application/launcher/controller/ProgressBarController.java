@@ -1,5 +1,6 @@
 package cn.hamster3.application.launcher.controller;
 
+import javafx.application.Platform;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
 
@@ -7,11 +8,11 @@ public class ProgressBarController {
     public Label name;
     public ProgressBar progress;
 
-    public void setName(String name) {
-        this.name.setText(name);
+    public void setName(String text) {
+        Platform.runLater(() -> name.setText(text));
     }
 
-    public void setProgress(double progress) {
-        this.progress.setProgress(progress);
+    public void setProgress(double value) {
+        Platform.runLater(() -> progress.setProgress(value));
     }
 }

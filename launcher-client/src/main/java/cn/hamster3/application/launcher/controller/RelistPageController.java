@@ -1,30 +1,35 @@
 package cn.hamster3.application.launcher.controller;
 
+import cn.hamster3.application.launcher.entity.auth.AccountProfile;
+import cn.hamster3.application.launcher.entity.option.LaunchOptions;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import javafx.scene.control.Alert;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.VBox;
-import cn.hamster3.application.launcher.entity.auth.AccountProfile;
-import cn.hamster3.application.launcher.entity.option.LaunchOptions;
 
 import java.io.IOException;
+import java.util.concurrent.CompletableFuture;
 
 public class RelistPageController {
     public VBox relistPane;
-
     public TextField accountField;
     public PasswordField passwordField;
 
     private LaunchOptions options;
     private AccountProfile profile;
+    private CompletableFuture<Void> future;
 
-    public void setProfile(LaunchOptions options, AccountProfile profile) {
+    public RelistPageController() {
+    }
+
+    public void init(LaunchOptions options, AccountProfile profile) {
         this.options = options;
         this.profile = profile;
 
         accountField.setText(profile.getAccount());
+        future = new CompletableFuture<>();
     }
 
     public void onConfirm() {
@@ -71,7 +76,11 @@ public class RelistPageController {
             options.removeProfile(profile);
             relistPane.getScene().getWindow().hide();
         } catch (IOException e) {
-            e.printStackTrace();
+            future.completeExceptionally(e);
         }
+    }
+
+    public CompletableFuture<Void> getFuture() {
+        return future;
     }
 }

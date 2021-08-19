@@ -2,7 +2,6 @@ package cn.hamster3.application.launcher.constant;
 
 import cn.hamster3.application.launcher.entity.auth.AccountProfile;
 import cn.hamster3.application.launcher.util.LauncherUtils;
-import cn.hamster3.application.launcher.util.ThreadUtils;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -13,13 +12,13 @@ import java.io.InputStreamReader;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
-import java.util.concurrent.CompletableFuture;
 
 @SuppressWarnings("SpellCheckingInspection")
 public enum AuthenticationType {
     AIRGAME(
             "五彩方块",
             "https://www.57block.cn",
+            "https://www.57block.cn/api/yggdrasil",
             "https://www.57block.cn/api/yggdrasil/authserver"
     ),
     OFFICIAL(
@@ -33,14 +32,16 @@ public enum AuthenticationType {
 
     private final String name;
     private final String url;
+    private final String apiUrl;
     private final String authHost;
     private final String accountsHost;
     private final String sessionHost;
     private final String servicesHost;
 
-    AuthenticationType(String name, String url, String authHost) {
+    AuthenticationType(String name, String url, String apiUrl, String authHost) {
         this.name = name;
         this.url = url;
+        this.apiUrl = apiUrl;
         this.authHost = authHost;
         this.accountsHost = null;
         this.sessionHost = null;
@@ -50,6 +51,7 @@ public enum AuthenticationType {
     AuthenticationType(String name, String url, String authHost, String accountsHost, String sessionHost, String servicesHost) {
         this.name = name;
         this.url = url;
+        this.apiUrl = null;
         this.authHost = authHost;
         this.accountsHost = accountsHost;
         this.sessionHost = sessionHost;
@@ -77,12 +79,12 @@ public enum AuthenticationType {
         connection.setRequestProperty("charset", "utf-8");
         connection.setConnectTimeout(5000);
         connection.setRequestMethod("POST");
-        System.out.println(params);
+        System.out.println("请求参数: " + params);
         connection.getOutputStream().write(params.getBytes(StandardCharsets.UTF_8));
         System.out.println("请求返回: " + connection.getResponseCode());
         JsonElement reader = JsonParser.parseReader(new InputStreamReader(connection.getInputStream()));
         connection.getInputStream().close();
-        System.out.println(LauncherUtils.gson.toJson(reader));
+        System.out.println("返回内容: " + reader.toString());
         System.out.println();
         return reader;
     }
@@ -98,7 +100,7 @@ public enum AuthenticationType {
         System.out.println("请求返回: " + connection.getResponseCode());
         JsonElement reader = JsonParser.parseReader(new InputStreamReader(connection.getInputStream()));
         connection.getInputStream().close();
-        System.out.println(LauncherUtils.gson.toJson(reader));
+        System.out.println("返回内容: " + reader.toString());
         System.out.println();
         return reader;
     }
@@ -121,14 +123,14 @@ public enum AuthenticationType {
     }
 
     public JsonObject postRefresh(AccountProfile profile, boolean requestUser) throws IOException {
-        JsonObject object = new JsonObject();
-        object.addProperty("name", profile.getPlayerName());
-        object.addProperty("id", profile.getPlayerUUID());
+        JsonObject selectedProfile = new JsonObject();
+        selectedProfile.addProperty("name", profile.getPlayerName());
+        selectedProfile.addProperty("id", profile.getPlayerUUID());
         return postRefresh(
                 profile.getAccessToken(),
                 profile.getClientToken(),
                 requestUser,
-                object
+                selectedProfile
         ).getAsJsonObject();
     }
 
@@ -136,38 +138,37 @@ public enum AuthenticationType {
      * https://github.com/yushijinhun/authlib-injector/wiki/Yggdrasil-%E6%9C%8D%E5%8A%A1%E7%AB%AF%E6%8A%80%E6%9C%AF%E8%A7%84%E8%8C%83#%E5%88%B7%E6%96%B0
      */
     public JsonElement postRefresh(String accessToken, String clientToken, boolean requestUser, JsonObject selectedProfile) throws IOException {
-        JsonObject object = new JsonObject();
-        object.addProperty("accessToken", accessToken);
-        object.addProperty("clientToken", clientToken);
-        object.addProperty("requestUser", requestUser);
-        object.add("selectedProfile", selectedProfile);
+        JsonObject params = new JsonObject();
+        params.addProperty("accessToken", accessToken);
+        params.addProperty("clientToken", clientToken);
+        params.addProperty("requestUser", requestUser);
+        params.add("selectedProfile", selectedProfile);
 
-        return post(authHost + "/refresh", object.toString());
+        return post(authHost + "/refresh", params.toString());
     }
 
-    public CompletableFuture<Boolean> postValidate(AccountProfile profile) {
-        CompletableFuture<Boolean> future = new CompletableFuture<>();
-        ThreadUtils.exec(() -> {
-            JsonObject object = new JsonObject();
-            object.addProperty("accessToken", profile.getAccessToken());
-            object.addProperty("clientToken", profile.getClientToken());
-            String params = object.toString();
-            String apiUrl = authHost + "/validate";
-            System.out.println("HTTP POST 请求: " + apiUrl);
-            try {
-                HttpsURLConnection connection = getConnection(apiUrl);
-                connection.setRequestMethod("POST");
-                System.out.println(params);
-                connection.getOutputStream().write(params.getBytes(StandardCharsets.UTF_8));
-                int code = connection.getResponseCode();
-                System.out.println("请求返回: " + code);
-                System.out.println();
-                future.complete(code == 204);
-            } catch (Exception e) {
-                future.completeExceptionally(e);
-            }
-        });
-        return future;
+    /**
+     * 验证令牌
+     *
+     * @param profile 账户
+     * @return true 代表验证成功，否则需要刷新账户
+     * @throws IOException 网络异常
+     */
+    public boolean postValidate(AccountProfile profile) throws IOException {
+        JsonObject object = new JsonObject();
+        object.addProperty("accessToken", profile.getAccessToken());
+        object.addProperty("clientToken", profile.getClientToken());
+        String params = object.toString();
+        String apiUrl = authHost + "/validate";
+        System.out.println("HTTP POST 请求: " + apiUrl);
+        HttpsURLConnection connection = getConnection(apiUrl);
+        connection.setRequestMethod("POST");
+        System.out.println("请求参数: " + params);
+        connection.getOutputStream().write(params.getBytes(StandardCharsets.UTF_8));
+        int code = connection.getResponseCode();
+        System.out.println("请求返回: " + code);
+        System.out.println();
+        return code == 204;
     }
 
     public String getSkilUrl(String playerUUID, String playerName) {
@@ -205,6 +206,10 @@ public enum AuthenticationType {
 
     public String getUrl() {
         return url;
+    }
+
+    public String getApiUrl() {
+        return apiUrl;
     }
 
     public String getAuthHost() {

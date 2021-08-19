@@ -178,7 +178,7 @@ public class LaunchOptions {
     }
 
     public String getMinMemory() {
-        return configs.getOrDefault("min_memory", "128");
+        return configs.getOrDefault("min_memory", "1024");
     }
 
     public void setMinMemory(String minMemory) {

@@ -73,3 +73,4 @@ Path: `libraries/name`
 |响应参数|内容|参数类型|示例|
 |:---|:---|:---|:---|
 |`version`|版本号|String|1.0.0-SNAPSHOT|
+|`info`|更新信息|String|第一版客户端|

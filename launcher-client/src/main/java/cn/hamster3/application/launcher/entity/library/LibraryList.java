@@ -13,10 +13,6 @@ public class LibraryList {
         libraries = new ArrayList<>();
         for (JsonElement element : libraryArray) {
             Library library = new Library(element.getAsJsonObject());
-            if (library.getGroup().equals("ca.weblite")) {
-                System.out.println("跳过library: " + library.getName());
-                continue;
-            }
             addLibrary(library);
         }
     }

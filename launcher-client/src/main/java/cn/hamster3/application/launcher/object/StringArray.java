@@ -16,6 +16,11 @@ public class StringArray {
 
     }
 
+    public StringArray add(int index, String string) {
+        strings.add(index, string);
+        return this;
+    }
+
     public StringArray append(String string) {
         strings.add(string);
         return this;

@@ -10,7 +10,9 @@ import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 
@@ -23,8 +25,20 @@ public class Bootstrap extends Application {
 
     @SuppressWarnings({"SpellCheckingInspection", "ConstantConditions"})
     public static void main(String[] args) {
+        String launcherVersion = LauncherUtils.getLauncherVersion();
+        if (!launcherVersion.equalsIgnoreCase("development_version")) {
+            try {
+                PrintStream stream = new PrintStream(
+                        new FileOutputStream("launcher.log", false), true, "UTF-8"
+                );
+                System.setOut(stream);
+                System.setErr(stream);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
         System.setProperty("java.net.useSystemProxies", "true");
-        System.setProperty("http.agent", "HamsterLauncher/1.0.0");
+        System.setProperty("http.agent", "HamsterLauncher/" + launcherVersion);
         System.setProperty("javafx.autoproxy.disable", "true");
         File backgroundFolder = LauncherUtils.getBackgroundDirectory();
         if (backgroundFolder.mkdirs()) {
@@ -39,7 +53,7 @@ public class Bootstrap extends Application {
                 e.printStackTrace();
             }
         }
-        System.out.println("启动 HamsterLauncher: " + LauncherUtils.getLauncherVersion());
+        System.out.println("启动 HamsterLauncher: " + launcherVersion);
         launch(args);
     }
 
@@ -55,6 +69,6 @@ public class Bootstrap extends Application {
         stage.initStyle(StageStyle.UNDECORATED);
         stage.getIcons().add(new Image("/images/icon.png"));
         stage.show();
-        stage.onCloseRequestProperty().set(event -> ThreadUtils.executorService.shutdownNow());
+        stage.onCloseRequestProperty().set(event -> ThreadUtils.executorService.shutdown());
     }
 }

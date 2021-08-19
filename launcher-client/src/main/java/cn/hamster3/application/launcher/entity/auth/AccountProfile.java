@@ -104,8 +104,8 @@ public class AccountProfile {
     }
 
     public boolean shouldRefreshIcon() {
-        // 10分钟缓存超时
-        return System.currentTimeMillis() - lastUpdateIconTime >= 1000 * 60 * 10;
+        // 1 分钟缓存超时
+        return System.currentTimeMillis() - lastUpdateIconTime >= 1000 * 60;
     }
 
     @Override

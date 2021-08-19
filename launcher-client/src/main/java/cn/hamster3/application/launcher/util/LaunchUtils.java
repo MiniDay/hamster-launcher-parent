@@ -1,6 +1,5 @@
 package cn.hamster3.application.launcher.util;
 
-import cn.hamster3.application.launcher.Bootstrap;
 import cn.hamster3.application.launcher.constant.AuthenticationType;
 import cn.hamster3.application.launcher.controller.ProgressBarController;
 import cn.hamster3.application.launcher.controller.ProgressBarListController;
@@ -19,19 +18,24 @@ import java.io.IOException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
-import java.util.ArrayList;
 import java.util.concurrent.CompletableFuture;
 
 public abstract class LaunchUtils {
-
+    /**
+     * 启动游戏
+     *
+     * @param pageController  -
+     * @param progressBarList -
+     * @return -
+     */
     @SuppressWarnings("SpellCheckingInspection")
     public static CompletableFuture<Void> launchGame(
             SidebarPageController pageController,
             ProgressBarListController progressBarList
-    ) throws Exception {
+    ) {
         long start = System.currentTimeMillis();
-        LaunchOptions options = LaunchOptions.getInstance();
 
+        LaunchOptions options = LaunchOptions.getInstance();
         AccountProfile selectedProfile = options.getSelectedProfile();
         if (selectedProfile == null) {
             Alert alert = new Alert(Alert.AlertType.WARNING);
@@ -39,88 +43,100 @@ public abstract class LaunchUtils {
             alert.setHeaderText("请登录账号");
             alert.setContentText("你必须先登录账号才能进入游戏!");
             alert.show();
-            long end = System.currentTimeMillis();
-            System.out.println("启动操作中断，耗时: " + (end - start) + " ms");
             CompletableFuture<Void> future = new CompletableFuture<>();
             future.complete(null);
             return future;
         }
-        ArrayList<CompletableFuture<?>> futures = new ArrayList<>();
+
+        CompletableFuture<?> launchCheckFuture = new CompletableFuture<>();
 
         AuthenticationType type = selectedProfile.getType();
+        CompletableFuture<File> authlibFuture;
+        // 验证外置登录库文件完整性
         if (type != AuthenticationType.OFFICIAL) {
             ProgressBarController downloadAuthLibProgress = progressBarList.createProgressBar("安装 authlib-injector...");
-            futures.add(
-                    downloadAuthlibInjector()
-                            .whenComplete((file, throwable) -> downloadAuthLibProgress.setProgress(1))
-            );
+            authlibFuture = downloadAuthlibInjector();
+            launchCheckFuture = authlibFuture
+                    .whenComplete((file, throwable) -> downloadAuthLibProgress.setProgress(1));
+        } else {
+            authlibFuture = null;
         }
 
-        ProgressBarController validateProgress = progressBarList.createProgressBar("验证账户");
-        futures.add(
-                type.postValidate(selectedProfile)
-                        .thenAccept(success -> {
-                            if (success) {
-                                return;
-                            }
-                            System.out.println("账户验证失败.");
-                            JsonObject object;
-                            try {
-                                object = type.postRefresh(selectedProfile, false);
-                            } catch (IOException e) {
-                                e.printStackTrace();
-                                pageController.showRelistPage(options, selectedProfile);
-                                return;
-                            }
-                            String accessToken = object.get("accessToken").getAsString();
-                            String clientToken = object.get("clientToken").getAsString();
-                            selectedProfile.setAccessToken(accessToken);
-                            selectedProfile.setClientToken(clientToken);
-                            System.out.println("令牌刷新成功.");
-                            options.save();
-                        })
-                        .whenComplete((file, throwable) -> validateProgress.setProgress(1))
+        // 验证账户令牌
+        ProgressBarController validateProgress = progressBarList.createProgressBar("验证账户令牌");
+        launchCheckFuture = CompletableFuture.allOf(
+                launchCheckFuture,
+                validateProfile(pageController, options)
+                        .whenComplete((a, e) -> validateProgress.setProgress(1))
         );
 
-        File minecraftFolder = LauncherUtils.getMinecraftFolder();
-        System.out.println(minecraftFolder.getAbsolutePath());
+        CompletableFuture<Void> launchFuture = new CompletableFuture<>();
+        launchCheckFuture.whenComplete((o, throwable) -> {
+            if (throwable != null) {
+                launchFuture.completeExceptionally(throwable);
+                return;
+            }
+            try {
+                File minecraftFolder = LauncherUtils.getMinecraftFolder();
+                System.out.println("游戏文件夹: " + minecraftFolder);
 
-        LaunchData launchData = new LaunchData(minecraftFolder, "五彩方块1.17.1", options);
-        launchData.generatorNativeLibrary();
+                LaunchData launchData = new LaunchData(minecraftFolder, "五彩方块1.17.1").generatorNativeLibrary(options);
 
-        StringArray launchScript = LauncherUtils.getLaunchScript(options, launchData);
-        System.out.println(launchScript);
-        System.out.println();
+                // 生成启动脚本
+                StringArray launchScript = LauncherUtils.getLaunchScript(launchData, options);
+                if (authlibFuture != null) {
+                    String authlibPath = authlibFuture.join().getAbsolutePath().replace("\\", "/");
+                    launchScript.add(1, String.format("-javaagent:%s=%s", authlibPath, type.getApiUrl()));
+                }
+                System.out.println("启动脚本: " + launchScript);
+                System.out.println();
 
-        ProcessBuilder builder = new ProcessBuilder();
-        builder.directory(launchData.getVersionFolder());
-        builder.environment().put("APPDATA", launchData.getMinecraftFolder().getParentFile().getAbsolutePath());
-        builder.command(launchScript.getStrings());
-        new StreamRedirectThread(builder.start()).start();
+                // 启动游戏
+                ProcessBuilder proccess = new ProcessBuilder();
+                proccess.directory(launchData.getVersionFolder());
+                proccess.environment().put("APPDATA", launchData.getMinecraftFolder().getParentFile().getAbsolutePath());
+                proccess.command(launchScript.getStrings());
+                new StreamRedirectThread(proccess.start(), launchFuture).start();
 
-        Bootstrap.getStage().hide();
+                long end = System.currentTimeMillis();
+                System.out.println("启动检测执行完成，耗时: " + (end - start) + " ms");
 
-        long end = System.currentTimeMillis();
-        System.out.println("启动执行完成，耗时: " + (end - start) + " ms");
-        return CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]));
+                ProgressBarController controller = progressBarList.createProgressBar("等待游戏启动.");
+                launchFuture.whenComplete((unused, throwable1) -> {
+                    controller.setProgress(1);
+                    controller.setName("游戏已启动!");
+                });
+            } catch (IOException e) {
+                launchFuture.completeExceptionally(e);
+            }
+        });
+        return launchFuture;
     }
 
+    /**
+     * 下载 authlib-injector
+     *
+     * @return -
+     */
     @SuppressWarnings("SpellCheckingInspection")
     public static CompletableFuture<File> downloadAuthlibInjector() {
         CompletableFuture<File> future = new CompletableFuture<>();
         File file = new File(LauncherUtils.getLauncherDirectory(), "authlib-injector-1.1.38.jar");
         if (file.exists()) {
-            if (EncryptionUtils.verificationFileSHA256(file, "c79416acc317eaade53307342d894ed6cf787c754282ae9de79e37ca28253941")) {
-
+            if (EncryptionUtils.sha256(file, "c79416acc317eaade53307342d894ed6cf787c754282ae9de79e37ca28253941")) {
+                System.out.println("authlib-injector 校验成功!");
                 future.complete(file);
                 return future;
             }
+            System.out.println("authlib-injector 校验失败, 重新下载!");
         }
         ThreadUtils.exec(() -> {
             try {
                 URL url = new URL("https://bmclapi2.bangbang93.com/mirrors/authlib-injector/artifact/38/authlib-injector-1.1.38.jar");
                 HttpsURLConnection connection = (HttpsURLConnection) url.openConnection();
                 connection.setDoInput(true);
+                connection.setRequestMethod("GET");
+                connection.setConnectTimeout(5000);
                 int code = connection.getResponseCode();
                 System.out.println("获取 authlib-injector 服务器返回状态码: " + code);
                 Files.copy(
@@ -130,9 +146,64 @@ public abstract class LaunchUtils {
                 );
                 future.complete(file);
             } catch (Exception e) {
+                future.completeExceptionally(e);
                 e.printStackTrace();
             }
         });
+        return future;
+    }
+
+    /**
+     * 验证账户令牌
+     *
+     * @return -
+     */
+    public static CompletableFuture<Void> validateProfile(
+            SidebarPageController pageController,
+            LaunchOptions options) {
+        CompletableFuture<Void> future = new CompletableFuture<>();
+        AccountProfile selectedProfile = options.getSelectedProfile();
+        AuthenticationType type = selectedProfile.getType();
+
+        ThreadUtils.exec(() -> {
+            // 验证令牌
+            try {
+                if (type.postValidate(selectedProfile)) {
+                    // 如果令牌验证成功则直接完成
+                    System.out.println("令牌验证成功!");
+                    future.complete(null);
+                    return;
+                }
+            } catch (IOException e) {
+                future.completeExceptionally(e);
+                return;
+            }
+            System.out.println("令牌验证失败.");
+            // 刷新令牌
+            try {
+                JsonObject object = type.postRefresh(selectedProfile, false);
+                String accessToken = object.get("accessToken").getAsString();
+                String clientToken = object.get("clientToken").getAsString();
+                selectedProfile.setAccessToken(accessToken);
+                selectedProfile.setClientToken(clientToken);
+                System.out.println("令牌刷新成功.");
+                options.save();
+                // 如果令牌刷新成功则成功
+                future.complete(null);
+            } catch (IOException e) {
+                pageController.showRelistPage(options, selectedProfile)
+                        .whenComplete(
+                                (unused, throwable) -> {
+                                    if (throwable != null) {
+                                        future.completeExceptionally(throwable);
+                                    } else {
+                                        future.complete(unused);
+                                    }
+                                }
+                        );
+            }
+        });
+
         return future;
     }
 

@@ -4,6 +4,7 @@ import cn.hamster3.application.launcher.Bootstrap;
 import cn.hamster3.application.launcher.entity.auth.AccountProfile;
 import cn.hamster3.application.launcher.entity.option.LaunchOptions;
 import cn.hamster3.application.launcher.util.LaunchUtils;
+import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
@@ -18,6 +19,7 @@ import javafx.stage.StageStyle;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ResourceBundle;
+import java.util.concurrent.CompletableFuture;
 
 @SuppressWarnings("SpellCheckingInspection")
 public class SidebarPageController implements Initializable {
@@ -61,23 +63,23 @@ public class SidebarPageController implements Initializable {
     public void startGame() {
         try {
             FXMLLoader loader = new FXMLLoader();
-            loader.setLocation(Bootstrap.class.getResource("/fxml/ProgressBar.fxml"));
-            loader.load();
+            loader.setLocation(Bootstrap.class.getResource("/fxml/ProgressBarList.fxml"));
             Scene scene = new Scene(loader.load());
-            Stage configStage = new Stage(StageStyle.UNDECORATED);
-            configStage.setScene(scene);
-            configStage.initOwner(Bootstrap.getStage());
-            configStage.initModality(Modality.WINDOW_MODAL);
-            configStage.show();
+            Stage progressBarList = new Stage(StageStyle.UNDECORATED);
+            progressBarList.setScene(scene);
+            progressBarList.initOwner(Bootstrap.getStage());
+            progressBarList.initModality(Modality.WINDOW_MODAL);
+            progressBarList.show();
 
             LaunchUtils.launchGame(this, loader.getController()).whenComplete(
                     (unused, e) -> {
                         if (e != null) {
                             System.out.println("启动失败!");
                             e.printStackTrace();
-                        } else {
-                            System.out.println("启动成功!");
+                            return;
                         }
+                        Platform.runLater(() -> Bootstrap.getStage().hide());
+                        System.out.println("启动成功!");
                     });
         } catch (Exception e) {
             e.printStackTrace();
@@ -121,26 +123,39 @@ public class SidebarPageController implements Initializable {
         }
     }
 
-    public void showRelistPage(LaunchOptions options, AccountProfile profile) {
+    public CompletableFuture<Void> showRelistPage(LaunchOptions options, AccountProfile profile) {
+        CompletableFuture<Void> future = new CompletableFuture<>();
         try {
             FXMLLoader loader = new FXMLLoader();
             loader.setLocation(Bootstrap.class.getResource("/fxml/RelistPage.fxml"));
             Scene scene = new Scene(loader.load());
-            Stage accountListStage = new Stage(StageStyle.UNDECORATED);
-            accountListStage.setScene(scene);
-            accountListStage.initOwner(Bootstrap.getStage());
-            accountListStage.initModality(Modality.WINDOW_MODAL);
-            accountListStage.show();
-            accountListStage.setOnHidden(event -> init());
-            RelistPageController controller = loader.getController();
-            controller.setProfile(options, profile);
+            Stage relistStage = new Stage(StageStyle.UNDECORATED);
+            relistStage.setScene(scene);
+            relistStage.initOwner(Bootstrap.getStage());
+            relistStage.initModality(Modality.WINDOW_MODAL);
+            relistStage.show();
 
-            accountListStage.setOnHidden(event -> {
+            RelistPageController controller = loader.getController();
+            controller.init(options, profile);
+
+            relistStage.setOnHidden(event -> {
                 options.save();
                 init();
+                if (!controller.getFuture().isDone()) {
+                    controller.getFuture().completeExceptionally(new Exception("用户强行关闭了验证页面."));
+                }
+            });
+
+            controller.getFuture().whenComplete((unused, e) -> {
+                if (e != null) {
+                    future.completeExceptionally(e);
+                } else {
+                    future.complete(unused);
+                }
             });
         } catch (IOException e) {
-            e.printStackTrace();
+            future.completeExceptionally(e);
         }
+        return future;
     }
 }

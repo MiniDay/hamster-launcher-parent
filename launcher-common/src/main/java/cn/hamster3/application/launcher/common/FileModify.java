@@ -1,8 +1,18 @@
 package cn.hamster3.application.launcher.common;
 
 public class FileModify {
-    private String path;
+    /**
+     * 操作类型
+     */
     private Type type;
+    /**
+     * 文件名
+     */
+    private String name;
+    /**
+     * 相对于 .minecraft 文件夹的路径
+     */
+    private String path;
 
     public FileModify(String path, Type type) {
         this.path = path;

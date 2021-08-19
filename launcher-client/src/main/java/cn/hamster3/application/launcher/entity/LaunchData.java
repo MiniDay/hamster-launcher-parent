@@ -1,13 +1,14 @@
 package cn.hamster3.application.launcher.entity;
 
-import cn.hamster3.application.launcher.entity.library.LibraryPath;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 import cn.hamster3.application.launcher.entity.asset.AssetIndex;
 import cn.hamster3.application.launcher.entity.library.LibraryList;
+import cn.hamster3.application.launcher.entity.library.LibraryPath;
 import cn.hamster3.application.launcher.entity.option.LaunchOptions;
 import cn.hamster3.application.launcher.object.StringArray;
 import cn.hamster3.application.launcher.util.LauncherUtils;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -31,14 +32,6 @@ public class LaunchData {
      * 要启动的版本名称，通过这个来寻找
      */
     private final String versionName;
-    /**
-     * 游戏配置，具体配置项请打开
-     * <p>
-     * .minecraft/versions/%versionName%/%versionName%.json
-     * <p>
-     * 查看
-     */
-    private final LaunchOptions options;
 
     /**
      * 游戏运行路径，通常是和 versionFolder 相同（各版本独立）
@@ -102,19 +95,13 @@ public class LaunchData {
      * <p>
      * 通过一定格式读取版本的 json 配置文件而生成
      */
-    private final StringArray jvmArguments;
+    private final JsonArray jvmArguments;
     /**
      * 游戏参数
      * <p>
      * 通过一定格式读取版本的 json 配置文件而生成
      */
-    private final StringArray gameArguments;
-    /**
-     * Java虚拟机要加载的所有类路径
-     * <p>
-     * 通过一定格式读取版本的 json 配置文件而生成
-     */
-    private final ArrayList<LibraryPath> libraryPathList;
+    private final JsonArray gameArguments;
 
     /**
      * 实例化启动脚本
@@ -124,21 +111,8 @@ public class LaunchData {
      * @throws IOException 读取版本配置和依赖路径时可能会抛出异常
      */
     public LaunchData(File minecraftFolder, String versionName) throws IOException {
-        this(minecraftFolder, versionName, LaunchOptions.getInstance());
-    }
-
-    /**
-     * 实例化启动脚本
-     *
-     * @param minecraftFolder minecraft 游戏路径。一般是指 .minecraft 文件夹
-     * @param versionName     版本名称
-     * @param options         启动选项
-     * @throws IOException 读取版本配置和依赖路径时可能会抛出异常
-     */
-    public LaunchData(File minecraftFolder, String versionName, LaunchOptions options) throws IOException {
         this.minecraftFolder = minecraftFolder;
         this.versionName = versionName;
-        this.options = options;
 
         gameFolder = new File(minecraftFolder, "versions/" + versionName);
         versionFolder = new File(minecraftFolder, "versions/" + versionName);
@@ -158,9 +132,8 @@ public class LaunchData {
         libraries = new LibraryList(object.getAsJsonArray("libraries"));
 
         JsonObject argumentsObject = object.getAsJsonObject("arguments");
-        gameArguments = LauncherUtils.parserVersionJson(argumentsObject.get("game"), options);
-        jvmArguments = LauncherUtils.parserVersionJson(argumentsObject.get("jvm"), options);
-        libraryPathList = libraries.getClassPath(options);
+        gameArguments = argumentsObject.get("game").getAsJsonArray();
+        jvmArguments = argumentsObject.get("jvm").getAsJsonArray();
     }
 
     /**
@@ -170,11 +143,11 @@ public class LaunchData {
      *
      * @throws IOException IO错误
      */
-    public void generatorNativeLibrary() throws IOException {
+    public LaunchData generatorNativeLibrary(LaunchOptions options) throws IOException {
         if (nativesFolder.mkdirs()) {
             System.out.println("创建 natives 文件夹...");
         }
-        for (LibraryPath path : libraryPathList) {
+        for (LibraryPath path : getClassPathList(options)) {
             // 不是 native 依赖则跳过
             if (!path.isNative()) {
                 continue;
@@ -205,6 +178,26 @@ public class LaunchData {
                 System.out.println("将 " + nativeLibraryFile.getAbsolutePath() + " 复制到 " + copyFile.getAbsolutePath() + " !");
             }
         }
+        return this;
+    }
+
+    public StringArray getReplacedGameArguments(LaunchOptions options) {
+        return LauncherUtils.parserVersionJson(gameArguments, options)
+                .replace("${game_directory}", gameFolder.getAbsolutePath())
+                .replace("${assets_index_name}", assetIndex.getId())
+                .replace("${assets_root}", new File(minecraftFolder, "assets").getAbsolutePath());
+    }
+
+    public StringArray getReplacedJvmArguments(LaunchOptions options) {
+        return LauncherUtils.parserVersionJson(jvmArguments, options)
+                .replace("${natives_directory}", new File(versionFolder, "natives").getAbsolutePath())
+                .replace("${launcher_name}", "仓鼠发射器")
+                .replace("${launcher_version}", "叁只仓鼠")
+                .replace("${classpath}", getClassPathString(options));
+    }
+
+    public ArrayList<LibraryPath> getClassPathList(LaunchOptions options) {
+        return libraries.getClassPath(options);
     }
 
     /**
@@ -216,10 +209,10 @@ public class LaunchData {
      *
      * @return 启动游戏所需要的所有类路径
      */
-    public String getClassPathString() {
+    public String getClassPathString(LaunchOptions options) {
         String pathPrefix = librariesFolder.getAbsolutePath() + "\\";
         ArrayList<String> classPath = new ArrayList<>();
-        for (LibraryPath path : libraryPathList) {
+        for (LibraryPath path : getClassPathList(options)) {
             if (path.isNative()) {
                 continue;
             }
@@ -227,22 +220,6 @@ public class LaunchData {
         }
         classPath.add(minecraftJarFile.getAbsolutePath());
         return String.join(";", classPath);
-    }
-
-    public StringArray getReplacedGameArguments() {
-        return gameArguments
-                .replace("${game_directory}", gameFolder.getAbsolutePath())
-                .replace("${assets_index_name}", assetIndex.getId())
-                .replace("${assets_root}", new File(minecraftFolder, "assets").getAbsolutePath())
-                ;
-    }
-
-    public StringArray getReplacedJvmArguments() {
-        return jvmArguments
-                .replace("${natives_directory}", new File(versionFolder, "natives").getAbsolutePath())
-                .replace("${launcher_name}", "仓鼠发射器")
-                .replace("${launcher_version}", "叁只仓鼠")
-                .replace("${classpath}", getClassPathString());
     }
 
     public File getMinecraftFolder() {
@@ -253,12 +230,20 @@ public class LaunchData {
         return versionName;
     }
 
-    public LaunchOptions getOptions() {
-        return options;
+    public File getGameFolder() {
+        return gameFolder;
     }
 
     public File getVersionFolder() {
         return versionFolder;
+    }
+
+    public File getLibrariesFolder() {
+        return librariesFolder;
+    }
+
+    public File getNativesFolder() {
+        return nativesFolder;
     }
 
     public File getMinecraftJarFile() {
@@ -281,24 +266,19 @@ public class LaunchData {
         return libraries;
     }
 
-    public StringArray getJvmArguments() {
+    public JsonArray getJvmArguments() {
         return jvmArguments;
     }
 
-    public StringArray getGameArguments() {
+    public JsonArray getGameArguments() {
         return gameArguments;
-    }
-
-    public ArrayList<LibraryPath> getClassPathList() {
-        return libraryPathList;
     }
 
     @Override
     public String toString() {
-        return "LauncherData{" +
+        return "LaunchData{" +
                 "minecraftFolder=" + minecraftFolder +
                 ", versionName='" + versionName + '\'' +
-                ", options=" + options +
                 ", gameFolder=" + gameFolder +
                 ", versionFolder=" + versionFolder +
                 ", librariesFolder=" + librariesFolder +
@@ -308,9 +288,8 @@ public class LaunchData {
                 ", versionType='" + versionType + '\'' +
                 ", assetIndex=" + assetIndex +
                 ", libraries=" + libraries +
-                ", jvmArguments='" + jvmArguments + '\'' +
-                ", gameArguments='" + gameArguments + '\'' +
-                ", libraryPathList=" + libraryPathList +
+                ", jvmArguments=" + jvmArguments +
+                ", gameArguments=" + gameArguments +
                 '}';
     }
 }
