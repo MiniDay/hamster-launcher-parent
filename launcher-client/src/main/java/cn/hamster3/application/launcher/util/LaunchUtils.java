@@ -78,6 +78,7 @@ public abstract class LaunchUtils {
             }
             try {
                 File minecraftFolder = LauncherUtils.getMinecraftFolder();
+//                minecraftFolder = new File("C:\\Users\\MiniDay\\Desktop\\五彩方块\\.minecraft");
                 System.out.println("游戏文件夹: " + minecraftFolder);
 
                 LaunchData launchData = new LaunchData(minecraftFolder, "五彩方块1.17.1").generatorNativeLibrary(options);

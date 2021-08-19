@@ -1,11 +1,23 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import javafx.geometry.*?>
 <?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
 
-
-<SplitPane fx:controller="cn.hamster3.application.launcher.controller.ProgressBarController" dividerPositions="0.382" nodeOrientation="LEFT_TO_RIGHT" prefHeight="20.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/11.0.2" xmlns:fx="http://javafx.com/fxml/1">
-   <items>
-      <Label fx:id="name" minWidth="80.0" text="c79416acc317eaade53307342d894ed6cf787c754282ae9de79e37ca28253941" />
-      <ProgressBar fx:id="progress" maxWidth="1.7976931348623157E308" minWidth="200.0" />
-   </items>
-</SplitPane>
+<HBox alignment="CENTER_LEFT" prefHeight="21.0" prefWidth="600.0" spacing="10.0" style="-fx-border-color: black; -fx-border-width: 0 0 1 0;" xmlns="http://javafx.com/javafx/11.0.2" xmlns:fx="http://javafx.com/fxml/1" fx:controller="cn.hamster3.application.launcher.controller.ProgressBarController">
+   <children>
+      <Label fx:id="name" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" text="中文测试：" HBox.hgrow="ALWAYS">
+         <font>
+            <Font size="13.0" />
+         </font>
+      </Label>
+      <ProgressIndicator fx:id="progress" prefHeight="20.0" prefWidth="22.0">
+         <HBox.margin>
+            <Insets />
+         </HBox.margin></ProgressIndicator>
+   </children>
+   <padding>
+      <Insets left="30.0" right="30.0" />
+   </padding>
+</HBox>

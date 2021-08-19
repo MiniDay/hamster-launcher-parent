@@ -11,9 +11,9 @@
             <VBox fx:id="progressBarList" prefWidth="600.0" spacing="4.0" />
         </content>
       </ScrollPane>
-      <Label layoutX="10.0" layoutY="10.0" text="启动游戏" AnchorPane.leftAnchor="10.0" AnchorPane.topAnchor="10.0">
+      <Label layoutX="7.0" layoutY="3.0" text="启动游戏" AnchorPane.leftAnchor="7.0" AnchorPane.topAnchor="3.0">
          <font>
-            <Font name="Microsoft YaHei" size="18.0" />
+            <Font name="Microsoft YaHei" size="24.0" />
          </font>
       </Label>
       <Button cancelButton="true" layoutX="273.0" layoutY="369.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="120.0" text="关闭" AnchorPane.bottomAnchor="7.0" AnchorPane.leftAnchor="240.0" />
