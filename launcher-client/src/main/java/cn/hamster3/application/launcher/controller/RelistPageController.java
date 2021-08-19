@@ -34,39 +34,44 @@ public class RelistPageController {
 
     public void onConfirm() {
         try {
-            JsonObject object = profile.getType().postLogin(
+            JsonObject responseParams = profile.getType().postLogin(
                     accountField.getText(),
                     passwordField.getText(),
                     false
             );
-            String accessToken = object.get("accessToken").getAsString();
-            String clientToken = object.get("clientToken").getAsString();
+            System.out.println("重新登录成功.");
+            String accessToken = responseParams.get("accessToken").getAsString();
+            String clientToken = responseParams.get("clientToken").getAsString();
             profile.setAccessToken(accessToken);
             profile.setClientToken(clientToken);
-            if (object.has("selectedProfile")) {
-                JsonObject selectedProfile = object.getAsJsonObject("selectedProfile");
-                String id = selectedProfile.get("id").getAsString();
-                String name = selectedProfile.get("name").getAsString();
-                if (!profile.getPlayerUUID().equals(id) || !profile.getPlayerName().equals(name)) {
-                    Alert alert = new Alert(Alert.AlertType.ERROR);
-                    alert.setTitle("角色失效");
-                    alert.setHeaderText("该角色已不可用");
-                    alert.setContentText("账户角色可能已被删除!");
-                    alert.showAndWait();
-                    options.removeProfile(profile);
-                }
-                relistPane.getScene().getWindow().hide();
-                return;
-            }
-            for (JsonElement element : object.getAsJsonArray("availableProfiles")) {
+//            if (responseParams.has("selectedProfile")) {
+//                JsonObject selectedProfile = responseParams.getAsJsonObject("selectedProfile");
+//                String id = selectedProfile.get("id").getAsString();
+//                String name = selectedProfile.get("name").getAsString();
+//                if (!profile.getPlayerUUID().equals(id) || !profile.getPlayerName().equals(name)) {
+//                    Alert alert = new Alert(Alert.AlertType.ERROR);
+//                    alert.setTitle("角色失效");
+//                    alert.setHeaderText("该角色已不可用");
+//                    alert.setContentText("账户角色可能已被删除!");
+//                    alert.showAndWait();
+//                    options.removeProfile(profile);
+//                }
+//                future.completeExceptionally(new Exception("账户角色已不可用!"));
+//                relistPane.getScene().getWindow().hide();
+//                return;
+//            }
+            for (JsonElement element : responseParams.getAsJsonArray("availableProfiles")) {
                 JsonObject selectedProfile = element.getAsJsonObject();
                 String id = selectedProfile.get("id").getAsString();
                 String name = selectedProfile.get("name").getAsString();
                 if (profile.getPlayerUUID().equals(id) && profile.getPlayerName().equals(name)) {
+                    System.out.println("选取角色: " + name + "(" + id + ")");
                     profile.getType().postRefresh(profile, false);
+                    future.complete(null);
                     relistPane.getScene().getWindow().hide();
                     return;
                 }
+                System.out.println("跳过角色: " + name + "(" + id + ")");
             }
             Alert alert = new Alert(Alert.AlertType.ERROR);
             alert.setTitle("角色失效");
@@ -74,6 +79,7 @@ public class RelistPageController {
             alert.setContentText("账户角色可能已被删除!");
             alert.showAndWait();
             options.removeProfile(profile);
+            future.completeExceptionally(new Exception("账户角色已不可用!"));
             relistPane.getScene().getWindow().hide();
         } catch (IOException e) {
             future.completeExceptionally(e);

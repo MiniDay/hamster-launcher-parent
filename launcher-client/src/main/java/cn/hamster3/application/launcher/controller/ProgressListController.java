@@ -7,9 +7,16 @@ import javafx.scene.Node;
 import javafx.scene.layout.VBox;
 
 import java.io.IOException;
+import java.util.concurrent.ExecutorService;
 
 public class ProgressListController {
     public VBox progressBarList;
+
+    private ExecutorService service;
+
+    public void init(ExecutorService service) {
+        this.service = service;
+    }
 
     public ProgressBarController createProgressBar(String name) {
         FXMLLoader loader = new FXMLLoader();
@@ -24,5 +31,10 @@ public class ProgressListController {
             e.printStackTrace();
         }
         return null;
+    }
+
+    public void onCancel() {
+        service.shutdownNow();
+        Platform.runLater(() -> progressBarList.getScene().getWindow().hide());
     }
 }

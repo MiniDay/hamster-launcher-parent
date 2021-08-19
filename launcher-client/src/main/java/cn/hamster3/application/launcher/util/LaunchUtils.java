@@ -19,6 +19,7 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
 
 public abstract class LaunchUtils {
     /**
@@ -31,7 +32,8 @@ public abstract class LaunchUtils {
     @SuppressWarnings("SpellCheckingInspection")
     public static CompletableFuture<Void> launchGame(
             SidebarPageController pageController,
-            ProgressListController progressBarList
+            ProgressListController progressBarList,
+            ExecutorService executorService
     ) {
         long start = System.currentTimeMillis();
 
@@ -55,7 +57,7 @@ public abstract class LaunchUtils {
         // 验证外置登录库文件完整性
         if (type != AuthenticationType.OFFICIAL) {
             ProgressBarController downloadAuthLibProgress = progressBarList.createProgressBar("安装 authlib-injector...");
-            authlibFuture = downloadAuthlibInjector();
+            authlibFuture = downloadAuthlibInjector(executorService);
             launchCheckFuture = authlibFuture
                     .whenComplete((file, throwable) -> downloadAuthLibProgress.setProgress(1));
         } else {
@@ -66,7 +68,7 @@ public abstract class LaunchUtils {
         ProgressBarController validateProgress = progressBarList.createProgressBar("验证账户令牌");
         launchCheckFuture = CompletableFuture.allOf(
                 launchCheckFuture,
-                validateProfile(pageController, options)
+                validateProfile(pageController, options, executorService)
                         .whenComplete((a, e) -> validateProgress.setProgress(1))
         );
 
@@ -90,7 +92,6 @@ public abstract class LaunchUtils {
                     launchScript.add(1, String.format("-javaagent:%s=%s", authlibPath, type.getApiUrl()));
                 }
                 System.out.println("启动脚本: " + launchScript);
-                System.out.println();
 
                 // 启动游戏
                 ProcessBuilder proccess = new ProcessBuilder();
@@ -120,7 +121,7 @@ public abstract class LaunchUtils {
      * @return -
      */
     @SuppressWarnings("SpellCheckingInspection")
-    public static CompletableFuture<File> downloadAuthlibInjector() {
+    public static CompletableFuture<File> downloadAuthlibInjector(ExecutorService executorService) {
         CompletableFuture<File> future = new CompletableFuture<>();
         File file = new File(LauncherUtils.getLauncherDirectory(), "authlib-injector-1.1.38.jar");
         if (file.exists()) {
@@ -131,7 +132,7 @@ public abstract class LaunchUtils {
             }
             System.out.println("authlib-injector 校验失败, 重新下载!");
         }
-        ThreadUtils.exec(() -> {
+        executorService.execute(() -> {
             try {
                 URL url = new URL("https://bmclapi2.bangbang93.com/mirrors/authlib-injector/artifact/38/authlib-injector-1.1.38.jar");
                 HttpsURLConnection connection = (HttpsURLConnection) url.openConnection();
@@ -161,13 +162,14 @@ public abstract class LaunchUtils {
      */
     public static CompletableFuture<Void> validateProfile(
             SidebarPageController pageController,
-            LaunchOptions options) {
+            LaunchOptions options,
+            ExecutorService executorService) {
         CompletableFuture<Void> future = new CompletableFuture<>();
         AccountProfile selectedProfile = options.getSelectedProfile();
         AuthenticationType type = selectedProfile.getType();
 
-        ThreadUtils.exec(() -> {
-            // 验证令牌
+        executorService.execute(() -> {
+            System.out.println("开始验证令牌.");
             try {
                 if (type.postValidate(selectedProfile)) {
                     // 如果令牌验证成功则直接完成
@@ -181,6 +183,7 @@ public abstract class LaunchUtils {
             }
             System.out.println("令牌验证失败.");
             // 刷新令牌
+            System.out.println("尝试刷新令牌.");
             try {
                 JsonObject object = type.postRefresh(selectedProfile, false);
                 String accessToken = object.get("accessToken").getAsString();
@@ -192,12 +195,16 @@ public abstract class LaunchUtils {
                 // 如果令牌刷新成功则成功
                 future.complete(null);
             } catch (IOException e) {
+                System.out.println("令牌刷新失败.");
+                System.out.println("弹出重新登录界面.");
                 pageController.showRelistPage(options, selectedProfile)
                         .whenComplete(
                                 (unused, throwable) -> {
                                     if (throwable != null) {
                                         future.completeExceptionally(throwable);
                                     } else {
+                                        System.out.println("重新登录成功.");
+                                        options.save();
                                         future.complete(unused);
                                     }
                                 }

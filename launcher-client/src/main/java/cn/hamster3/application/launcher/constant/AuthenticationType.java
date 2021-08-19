@@ -85,7 +85,6 @@ public enum AuthenticationType {
         JsonElement reader = JsonParser.parseReader(new InputStreamReader(connection.getInputStream()));
         connection.getInputStream().close();
         System.out.println("返回内容: " + reader.toString());
-        System.out.println();
         return reader;
     }
 
@@ -101,7 +100,6 @@ public enum AuthenticationType {
         JsonElement reader = JsonParser.parseReader(new InputStreamReader(connection.getInputStream()));
         connection.getInputStream().close();
         System.out.println("返回内容: " + reader.toString());
-        System.out.println();
         return reader;
     }
 
@@ -167,7 +165,6 @@ public enum AuthenticationType {
         connection.getOutputStream().write(params.getBytes(StandardCharsets.UTF_8));
         int code = connection.getResponseCode();
         System.out.println("请求返回: " + code);
-        System.out.println();
         return code == 204;
     }
 
