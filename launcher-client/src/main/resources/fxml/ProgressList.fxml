@@ -4,7 +4,7 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.*?>
 
-<AnchorPane prefHeight="400.0" prefWidth="600.0" style="-fx-background-color: rgb(0,255,128);" xmlns="http://javafx.com/javafx/11.0.2" xmlns:fx="http://javafx.com/fxml/1" fx:controller="cn.hamster3.application.launcher.controller.ProgressBarListController">
+<AnchorPane prefHeight="400.0" prefWidth="600.0" style="-fx-background-color: rgb(0,255,128);" xmlns="http://javafx.com/javafx/11.0.2" xmlns:fx="http://javafx.com/fxml/1" fx:controller="cn.hamster3.application.launcher.controller.ProgressListController">
    <children>
       <ScrollPane hbarPolicy="NEVER" layoutX="63.0" layoutY="71.0" prefHeight="200.0" prefWidth="200.0" vbarPolicy="NEVER" AnchorPane.bottomAnchor="40.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="40.0">
         <content>

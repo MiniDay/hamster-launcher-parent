@@ -63,7 +63,7 @@ public class SidebarPageController implements Initializable {
     public void startGame() {
         try {
             FXMLLoader loader = new FXMLLoader();
-            loader.setLocation(Bootstrap.class.getResource("/fxml/ProgressBarList.fxml"));
+            loader.setLocation(Bootstrap.class.getResource("/fxml/ProgressList.fxml"));
             Scene scene = new Scene(loader.load());
             Stage progressBarList = new Stage(StageStyle.UNDECORATED);
             progressBarList.setScene(scene);

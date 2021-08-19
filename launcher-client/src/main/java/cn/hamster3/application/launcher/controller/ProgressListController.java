@@ -8,7 +8,7 @@ import javafx.scene.layout.VBox;
 
 import java.io.IOException;
 
-public class ProgressBarListController {
+public class ProgressListController {
     public VBox progressBarList;
 
     public ProgressBarController createProgressBar(String name) {

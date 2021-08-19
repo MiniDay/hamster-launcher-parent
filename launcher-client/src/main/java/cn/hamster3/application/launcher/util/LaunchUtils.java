@@ -2,7 +2,7 @@ package cn.hamster3.application.launcher.util;
 
 import cn.hamster3.application.launcher.constant.AuthenticationType;
 import cn.hamster3.application.launcher.controller.ProgressBarController;
-import cn.hamster3.application.launcher.controller.ProgressBarListController;
+import cn.hamster3.application.launcher.controller.ProgressListController;
 import cn.hamster3.application.launcher.controller.SidebarPageController;
 import cn.hamster3.application.launcher.entity.LaunchData;
 import cn.hamster3.application.launcher.entity.auth.AccountProfile;
@@ -31,7 +31,7 @@ public abstract class LaunchUtils {
     @SuppressWarnings("SpellCheckingInspection")
     public static CompletableFuture<Void> launchGame(
             SidebarPageController pageController,
-            ProgressBarListController progressBarList
+            ProgressListController progressBarList
     ) {
         long start = System.currentTimeMillis();
 
