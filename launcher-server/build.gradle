@@ -24,6 +24,8 @@ configurations {
 }
 
 dependencies {
+    implementationShade project(":launcher-common")
+
     implementationShade "io.vertx:vertx-core:${vertxVersion}"
     implementationShade "io.vertx:vertx-web:${vertxVersion}"
     implementationShade "io.vertx:vertx-web-client:${vertxVersion}"

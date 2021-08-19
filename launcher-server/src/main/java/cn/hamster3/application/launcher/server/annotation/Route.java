@@ -10,7 +10,12 @@ import java.lang.annotation.Target;
 public @interface Route {
     String value();
 
-    boolean isRegex() default false;
+    /**
+     * https://vertx.io/docs/vertx-web/java/#_routing_with_regular_expressions
+     *
+     * @return 是否以正则表达式判断
+     */
+    boolean withRegex() default false;
 
     String[] method() default {};
 }

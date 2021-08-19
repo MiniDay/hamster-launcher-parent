@@ -1,6 +1,9 @@
 package cn.hamster3.application.launcher.server;
 
+import cn.hamster3.application.launcher.server.controller.ClientController;
+import cn.hamster3.application.launcher.server.controller.LauncherController;
 import cn.hamster3.application.launcher.server.controller.MainController;
+import cn.hamster3.application.launcher.server.core.Resources;
 import cn.hamster3.application.launcher.server.util.RouteUtils;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Promise;
@@ -24,21 +27,26 @@ public class ServerBootstrap extends AbstractVerticle {
                             }
                         }
                 );
-
     }
 
     @Override
     public void start(Promise<Void> startPromise) {
         vertx.createHttpServer()
-                .requestHandler(RouteUtils.getRouter(vertx, new MainController()))
-                .listen(8888)
-                .onComplete(http -> {
-                    if (http.succeeded()) {
+                .requestHandler(RouteUtils.getRouter(
+                        vertx,
+                        MainController.class,
+                        LauncherController.class,
+                        ClientController.class
+                )).listen(8888)
+                .onComplete(future -> {
+                    if (future.succeeded()) {
                         startPromise.complete();
-                        logger.info("服务器已启动.");
+                        logger.info("服务器已在端口 " + future.result().actualPort() + " 上启动.");
+                        timerReload();
+                        vertx.setPeriodic(1000 * 60, event -> timerReload());
                     } else {
-                        startPromise.fail(http.cause());
-                        logger.error("服务器启动失败.", http.cause());
+                        startPromise.fail(future.cause());
+                        logger.error("服务器启动失败.", future.cause());
                     }
                 });
     }
@@ -57,4 +65,7 @@ public class ServerBootstrap extends AbstractVerticle {
                 });
     }
 
+    private void timerReload() {
+        Resources.getInstance().reloadLauncherInfoList();
+    }
 }
