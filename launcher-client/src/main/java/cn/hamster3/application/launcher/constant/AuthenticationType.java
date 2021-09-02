@@ -1,14 +1,13 @@
 package cn.hamster3.application.launcher.constant;
 
 import cn.hamster3.application.launcher.entity.auth.AccountProfile;
-import cn.hamster3.application.launcher.util.LauncherUtils;
+import cn.hamster3.application.launcher.util.HttpUtils;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
 import javax.net.ssl.HttpsURLConnection;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
@@ -31,77 +30,34 @@ public enum AuthenticationType {
     );
 
     private final String name;
-    private final String url;
-    private final String apiUrl;
+    private final String siteUrl;
+    private final String yggdrasilApiUrl;
+
     private final String authHost;
     private final String accountsHost;
     private final String sessionHost;
     private final String servicesHost;
 
-    AuthenticationType(String name, String url, String apiUrl, String authHost) {
+    AuthenticationType(String name, String siteUrl, String yggdrasilApiUrl, String authHost) {
         this.name = name;
-        this.url = url;
-        this.apiUrl = apiUrl;
+        this.siteUrl = siteUrl;
+        this.yggdrasilApiUrl = yggdrasilApiUrl;
         this.authHost = authHost;
         this.accountsHost = null;
         this.sessionHost = null;
         this.servicesHost = null;
     }
 
-    AuthenticationType(String name, String url, String authHost, String accountsHost, String sessionHost, String servicesHost) {
+    AuthenticationType(String name, String siteUrl, String authHost, String accountsHost, String sessionHost, String servicesHost) {
         this.name = name;
-        this.url = url;
-        this.apiUrl = null;
+        this.siteUrl = siteUrl;
+        this.yggdrasilApiUrl = null;
         this.authHost = authHost;
         this.accountsHost = accountsHost;
         this.sessionHost = sessionHost;
         this.servicesHost = servicesHost;
     }
 
-    public HttpsURLConnection getConnection(String connectionUrl) throws IOException {
-        URL url = new URL(connectionUrl);
-        HttpsURLConnection connection = (HttpsURLConnection) url.openConnection();
-        connection.setDoOutput(true);
-        connection.setDoInput(true);
-        connection.setRequestProperty("Content-Type", "application/json");
-        connection.setRequestProperty("charset", "utf-8");
-        connection.setConnectTimeout(5000);
-        return connection;
-    }
-
-    private JsonElement post(String apiUrl, String params) throws IOException {
-        System.out.println("HTTP POST 请求: " + apiUrl);
-        URL url = new URL(apiUrl);
-        HttpsURLConnection connection = (HttpsURLConnection) url.openConnection();
-        connection.setDoOutput(true);
-        connection.setDoInput(true);
-        connection.setRequestProperty("Content-Type", "application/json");
-        connection.setRequestProperty("charset", "utf-8");
-        connection.setConnectTimeout(5000);
-        connection.setRequestMethod("POST");
-        System.out.println("请求参数: " + params);
-        connection.getOutputStream().write(params.getBytes(StandardCharsets.UTF_8));
-        System.out.println("请求返回: " + connection.getResponseCode());
-        JsonElement reader = JsonParser.parseReader(new InputStreamReader(connection.getInputStream()));
-        connection.getInputStream().close();
-        System.out.println("返回内容: " + reader.toString());
-        return reader;
-    }
-
-    private JsonElement get(String apiUrl) throws IOException {
-        System.out.println("HTTP GET 请求: " + apiUrl);
-        URL url = new URL(apiUrl);
-        HttpsURLConnection connection = (HttpsURLConnection) url.openConnection();
-        connection.setDoInput(true);
-        connection.setRequestProperty("charset", "utf-8");
-        connection.setConnectTimeout(5000);
-        connection.setRequestMethod("GET");
-        System.out.println("请求返回: " + connection.getResponseCode());
-        JsonElement reader = JsonParser.parseReader(new InputStreamReader(connection.getInputStream()));
-        connection.getInputStream().close();
-        System.out.println("返回内容: " + reader.toString());
-        return reader;
-    }
 
     /**
      * https://github.com/yushijinhun/authlib-injector/wiki/Yggdrasil-%E6%9C%8D%E5%8A%A1%E7%AB%AF%E6%8A%80%E6%9C%AF%E8%A7%84%E8%8C%83#%E7%99%BB%E5%BD%95
@@ -117,7 +73,7 @@ public enum AuthenticationType {
         agent.addProperty("version", 1);
         object.add("agent", agent);
 
-        return post(authHost + "/authenticate", object.toString()).getAsJsonObject();
+        return HttpUtils.post(authHost + "/authenticate", object.toString()).getAsJsonObject();
     }
 
     public JsonObject postRefresh(AccountProfile profile, boolean requestUser) throws IOException {
@@ -141,8 +97,7 @@ public enum AuthenticationType {
         params.addProperty("clientToken", clientToken);
         params.addProperty("requestUser", requestUser);
         params.add("selectedProfile", selectedProfile);
-
-        return post(authHost + "/refresh", params.toString());
+        return HttpUtils.post(authHost + "/refresh", params.toString());
     }
 
     /**
@@ -157,13 +112,19 @@ public enum AuthenticationType {
         object.addProperty("accessToken", profile.getAccessToken());
         object.addProperty("clientToken", profile.getClientToken());
         String params = object.toString();
-        String apiUrl = authHost + "/validate";
-        System.out.println("HTTP POST 请求: " + apiUrl);
-        HttpsURLConnection connection = getConnection(apiUrl);
+        String url = authHost + "/validate";
+        System.out.println("HTTP POST 请求: " + url);
+        HttpsURLConnection connection = (HttpsURLConnection) new URL(url).openConnection();
+        connection.setDoInput(true);
+        connection.setRequestProperty("Content-Type", "application/json");
+        connection.setRequestProperty("charset", "utf-8");
+        connection.setConnectTimeout(5000);
         connection.setRequestMethod("POST");
         System.out.println("请求参数: " + params);
         connection.getOutputStream().write(params.getBytes(StandardCharsets.UTF_8));
+        connection.connect();
         int code = connection.getResponseCode();
+        connection.disconnect();
         System.out.println("请求返回: " + code);
         return code == 204;
     }
@@ -171,11 +132,11 @@ public enum AuthenticationType {
     public String getSkilUrl(String playerUUID, String playerName) {
         switch (this) {
             case AIRGAME: {
-                return url + "/skin/" + playerName + ".png";
+                return siteUrl + "/skin/" + playerName + ".png";
             }
             case OFFICIAL: {
                 try {
-                    JsonObject object = get(sessionHost + "/session/minecraft/profile/" + playerUUID).getAsJsonObject();
+                    JsonObject object = HttpUtils.get(sessionHost + "/session/minecraft/profile/" + playerUUID).getAsJsonObject();
                     if (!object.has("properties")) {
                         return null;
                     }
@@ -201,12 +162,12 @@ public enum AuthenticationType {
         return name;
     }
 
-    public String getUrl() {
-        return url;
+    public String getSiteUrl() {
+        return siteUrl;
     }
 
-    public String getApiUrl() {
-        return apiUrl;
+    public String getYggdrasilApiUrl() {
+        return yggdrasilApiUrl;
     }
 
     public String getAuthHost() {

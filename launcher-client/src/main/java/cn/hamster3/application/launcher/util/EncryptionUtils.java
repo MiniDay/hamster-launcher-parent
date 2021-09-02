@@ -4,7 +4,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.security.MessageDigest;
 
-public class EncryptionUtils {
+public abstract class EncryptionUtils {
 
     public static boolean sha1(File file, String sha1) {
         return hashFile(file, "SHA1").equals(sha1);

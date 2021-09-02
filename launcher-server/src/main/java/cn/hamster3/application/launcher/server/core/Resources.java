@@ -63,22 +63,20 @@ public class Resources {
      * @return -
      */
     public JsonObject getLauncherInfo(String version) {
-        LauncherVersionInfo versionInfo = launcherVersionInfoList.stream()
-                .filter(info -> info.getVersion().equalsIgnoreCase(version))
-                .findFirst()
-                .orElse(null);
-        if (versionInfo == null) {
+        synchronized (launcherVersionInfoList) {
+            if (version.equalsIgnoreCase("latest")) {
+                if (launcherVersionInfoList.size() < 1) {
+                    return null;
+                }
+                version = launcherVersionInfoList.get(0).getVersion();
+            }
+            for (LauncherVersionInfo info : launcherVersionInfoList) {
+                if (info.getVersion().equalsIgnoreCase(version)) {
+                    return getLauncherInfoAsJson(info);
+                }
+            }
             return null;
         }
-        return getLauncherInfoAsJson(versionInfo);
-    }
-
-    public JsonObject getLatestLauncherInfo() {
-        if (launcherVersionInfoList.size() < 1) {
-            return null;
-        }
-        LauncherVersionInfo info = launcherVersionInfoList.get(0);
-        return getLauncherInfoAsJson(info);
     }
 
     /**
@@ -97,6 +95,14 @@ public class Resources {
      * @return -
      */
     public File getLauncherFile(String version) {
+        if (version.equalsIgnoreCase("latest")) {
+            synchronized (launcherVersionInfoList) {
+                if (launcherVersionInfoList.size() < 1) {
+                    return null;
+                }
+                version = launcherVersionInfoList.get(0).getVersion();
+            }
+        }
         File launchersFolder = new File("launchers");
         File versionFolder = new File(launchersFolder, version);
         return new File(versionFolder, "HamsterLauncher-" + version + ".jar");

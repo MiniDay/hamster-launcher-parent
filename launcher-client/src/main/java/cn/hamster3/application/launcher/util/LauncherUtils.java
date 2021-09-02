@@ -19,7 +19,7 @@ import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.util.jar.JarFile;
 
-public class LauncherUtils {
+public abstract class LauncherUtils {
     public static final Gson gson = new GsonBuilder().serializeNulls().setPrettyPrinting().create();
 
 

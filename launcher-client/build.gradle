@@ -16,6 +16,8 @@ configurations {
 }
 
 dependencies {
+    implementationShade project(":launcher-common")
+
     // https://mvnrepository.com/artifact/org.jetbrains/annotations
     implementationShade group: 'org.jetbrains', name: 'annotations', version: '22.0.0'
     // https://mvnrepository.com/artifact/com.google.code.gson/gson

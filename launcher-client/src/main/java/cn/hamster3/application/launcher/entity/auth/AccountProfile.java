@@ -90,14 +90,15 @@ public class AccountProfile {
             if (skinUrl == null) {
                 return;
             }
-            URL url = new URL(skinUrl);
-            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            HttpURLConnection connection = (HttpURLConnection) new URL(skinUrl).openConnection();
             connection.setDoInput(true);
             connection.setRequestMethod("GET");
+            connection.connect();
             InputStream inputStream = connection.getInputStream();
             playerIcon = Base64.getEncoder().encodeToString(LauncherUtils.getAvatorFromSkin(inputStream, 128));
             lastUpdateIconTime = System.currentTimeMillis();
             inputStream.close();
+            connection.disconnect();
         } catch (Exception e) {
             e.printStackTrace();
         }

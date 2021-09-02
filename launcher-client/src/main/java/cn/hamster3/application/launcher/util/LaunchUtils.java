@@ -89,7 +89,7 @@ public abstract class LaunchUtils {
                 StringArray launchScript = LauncherUtils.getLaunchScript(launchData, options);
                 if (authlibFuture != null) {
                     String authlibPath = authlibFuture.join().getAbsolutePath().replace("\\", "/");
-                    launchScript.add(1, String.format("-javaagent:%s=%s", authlibPath, type.getApiUrl()));
+                    launchScript.add(1, String.format("-javaagent:%s=%s", authlibPath, type.getYggdrasilApiUrl()));
                 }
                 System.out.println("启动脚本: " + launchScript);
 
