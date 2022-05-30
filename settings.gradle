@@ -1,4 +1,4 @@
-rootProject.name = 'HamsterLauncher-Parent'
+rootProject.name = 'hamster-launcher-parent'
 include 'launcher-client'
 include 'launcher-server'
 include 'launcher-common'
